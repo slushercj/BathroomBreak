@@ -250,12 +250,12 @@ const styles = StyleSheet.create({
   },
   createAccountText: {
     opacity: 0.8,
-    color: "#dfdfdf",
+    color: "#fff",
     margin: 5,
   },
   createAccountButton: {
     opacity: 0.8,
-    color: "#dfdfdf",
+    color: "#fff",
     margin: 5,
     fontWeight: "bold",
   },
