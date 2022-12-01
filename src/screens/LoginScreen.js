@@ -12,7 +12,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Zocial, FontAwesome, SimpleLineIcons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-const LoginScreen = () => {
+const LoginScreen = ({ navigation }) => {
   const [email, onChangeEmail] = React.useState("");
   const [password, onChangePassword] = React.useState("");
 
@@ -99,7 +99,9 @@ const LoginScreen = () => {
         </View>
         <View style={styles.createAccount}>
           <Text style={styles.createAccountText}>Don't have an account?</Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("CreateAccount")}
+          >
             <Text style={styles.createAccountButton}>Register</Text>
           </TouchableOpacity>
         </View>
