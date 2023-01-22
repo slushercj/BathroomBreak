@@ -76,7 +76,10 @@ const LoginScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.buttonSection}>
-        <TouchableOpacity style={styles.signInButton}>
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={() => navigation.navigate("MapScreen")}
+        >
           <Text style={styles.signInText}>Sign in</Text>
         </TouchableOpacity>
         <View style={styles.socialSignIn}>
