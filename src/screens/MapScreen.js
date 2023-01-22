@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Platform, Text, View, StyleSheet } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { Platform, Text, Image, View, StyleSheet } from "react-native";
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from "react-native-maps";
+import { Zocial, FontAwesome5, SimpleLineIcons } from "@expo/vector-icons";
 import Device from "expo-device";
 import * as Location from "expo-location";
 import google from "../api/google";
@@ -78,7 +79,7 @@ export default function MapScreen() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          minZoomLevel={11}
+          minZoomLevel={12}
           onMapReady={goToMyLocation}
           region={{
             latitude: location.coords.latitude,
@@ -98,7 +99,24 @@ export default function MapScreen() {
                     latitude: r.geometry.location.lat,
                     longitude: r.geometry.location.lng,
                   }}
-                />
+                  image={require("../../assets/logo.png")}
+                  key={r.place_id}
+                >
+                  <Callout style={styles.callout}>
+                    {/*                     
+                    <Image
+                      source={}
+                      style={{ height: 35, width: 35 }}
+                    /> */}
+                    <Text style={styles.callOutHeading}>{r.name}</Text>
+                    <Text style={styles.callOutAddress}>{r.vicinity}</Text>
+                    <FontAwesome5
+                      name="directions"
+                      size={24}
+                      style={styles.callOutNavigation}
+                    />
+                  </Callout>
+                </Marker>
               );
             })}
         </MapView>
@@ -113,5 +131,24 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  callout: {
+    textAlign: "center",
+  },
+  callOutHeading: {
+    width: "100%",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5,
+  },
+  callOutAddress: {
+    fontSize: 16,
+    color: "gray",
+    marginBottom: 5,
+  },
+  callOutNavigation: {
+    textAlign: "right",
+    marginBottom: 5,
   },
 });
