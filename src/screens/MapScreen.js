@@ -5,28 +5,74 @@ import { Zocial, FontAwesome5, SimpleLineIcons } from "@expo/vector-icons";
 import Device from "expo-device";
 import * as Location from "expo-location";
 import google from "../api/google";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import MapViewDirections from "react-native-maps-directions";
+import axios from "axios";
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [results, setResults] = useState([]);
-  const [pageToken, setPageToken] = useState(null);
+  const [searchTokens, setSearchTokens] = useState([]);
 
   const mapRef = React.createRef();
 
-  const nearbySearch = async (location) => {
-    const response = await google.get("/maps/api/place/nearbysearch/json", {
-      params: {
-        location: `${location.coords.latitude},${location.coords.longitude}`,
-        radius: 8000,
-        name: "mcdonald's|starbucks|cvs|walgreens|ampm|extramile",
-        pagetoken: null,
-      },
+  const fetchData = (cl) => {
+    if (!cl) return;
+
+    const searchLocations = [
+      "mcdonald's",
+      "starbucks",
+      "cvs",
+      "rite aid",
+      "walmart",
+      "target",
+      "arco",
+      "extra miles",
+      "winco",
+      "publix",
+      "piggly wiggly",
+      "meijer",
+      "wegmans",
+      "safeway pharmacy",
+      "walgreens",
+      "ampm",
+      "extramile",
+      "pilot flying j",
+      "love's travel",
+      "ta travel center",
+      "sapp bros",
+    ];
+
+    let apiCalls = [];
+    searchLocations.forEach((loc) => {
+      let call = google.get("/maps/api/place/nearbysearch/json", {
+        params: {
+          location: `${cl.coords.latitude},${cl.coords.longitude}`,
+          radius: 8000,
+          keyword: loc,
+          // pageToken,
+        },
+      });
+      apiCalls.push(call);
     });
-    // console.log("Search results: ");
-    console.log(response.data.results);
-    setResults(response.data.results);
-    setPageToken(response.data.next_page_token);
+
+    axios
+      .all(apiCalls)
+      .then(
+        axios.spread((...allData) => {
+          let places = [];
+
+          allData.map((r) => {
+            places = places.concat(r.data.results);
+          });
+
+          return places;
+        })
+      )
+      .then((r) => {
+        setResults(r);
+      });
   };
 
   useEffect(() => {
@@ -36,20 +82,25 @@ export default function MapScreen() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({
+      Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
         enableHighAccuracy: true,
         timeInterval: 5,
-      });
-
-      setLocation(location);
-      nearbySearch(location);
+      })
+        .then((currentLocation) => {
+          console.log(
+            `Setting current Location to {${currentLocation.coords.latitude},${currentLocation.coords.longitude}}`
+          );
+          setLocation(currentLocation);
+          return currentLocation;
+        })
+        .then((cl) => {
+          console.log(`Fetching data`);
+          fetchData(cl);
+          return cl;
+        });
     })();
   }, []);
-
-  // useEffect(async () => {
-  //   await nearbySearch();
-  // }, []);
 
   let text = "Waiting..";
   if (errorMsg) {
@@ -60,10 +111,18 @@ export default function MapScreen() {
   }
 
   const goToMyLocation = async () => {
-    console.log(`Going to location `);
-    console.log(location);
+    if (location == null) {
+      console.log("Current location is null");
+    }
 
-    if (location == null || mapRef == null) return;
+    if (mapRef == null) {
+      console.log("Mapref is null");
+      return;
+    }
+
+    console.log(
+      `Going to current location: {${location.coords.latitude},${location.coords.longitude}}`
+    );
 
     mapRef.current.animateCamera({
       center: {
@@ -74,7 +133,7 @@ export default function MapScreen() {
   };
 
   return (
-    location && (
+    location?.coords && (
       <View style={styles.container}>
         <MapView
           ref={mapRef}
@@ -82,16 +141,14 @@ export default function MapScreen() {
           minZoomLevel={12}
           onMapReady={goToMyLocation}
           region={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: location?.coords?.latitude,
+            longitude: location?.coords?.longitude,
           }}
           provider={PROVIDER_GOOGLE}
           showsUserLocation={true}
-          zoomControlEnabled={true}
-          zoomEnabled={true}
         >
           {results &&
-            results.map((r) => {
+            results.map((r, i) => {
               return (
                 <Marker
                   title={`${r.name} at ${r.vicinity}`}
@@ -100,7 +157,7 @@ export default function MapScreen() {
                     longitude: r.geometry.location.lng,
                   }}
                   image={require("../../assets/logo.png")}
-                  key={r.place_id}
+                  key={i}
                 >
                   <Callout style={styles.callout}>
                     {/*                     
@@ -110,11 +167,22 @@ export default function MapScreen() {
                     /> */}
                     <Text style={styles.callOutHeading}>{r.name}</Text>
                     <Text style={styles.callOutAddress}>{r.vicinity}</Text>
-                    <FontAwesome5
-                      name="directions"
-                      size={24}
-                      style={styles.callOutNavigation}
-                    />
+                    <TouchableOpacity>
+                      <FontAwesome5
+                        name="directions"
+                        size={24}
+                        style={styles.callOutNavigation}
+                      />
+                      {/* <MapViewDirections
+                        origin={r.geometry.location}
+                        destination={`r.geometry.location: ${r.geometry.location}`}
+                        apikey="AIzaSyALxVcQZDG7p4qh_89RmPJ8pguo-mtYyRI"
+                        strokeWidth={3}
+                        strokeColor="hotpink"
+                        onReady={console.log(location)}
+                        // onError={this.onError}
+                      /> */}
+                    </TouchableOpacity>
                   </Callout>
                 </Marker>
               );
@@ -143,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   callOutAddress: {
-    fontSize: 16,
+    fontSize: 18,
     color: "gray",
     marginBottom: 5,
   },
