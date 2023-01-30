@@ -132,6 +132,10 @@ export default function MapScreen() {
     });
   };
 
+  const locationClicked = (r) => {
+    console.log(r.nativeEvent.coordinate);
+  };
+
   return (
     location?.coords && (
       <View style={styles.container}>
@@ -158,13 +162,10 @@ export default function MapScreen() {
                   }}
                   image={require("../../assets/logo.png")}
                   key={i}
+                  onPress={locationClicked}
+                  data={r}
                 >
                   <Callout style={styles.callout}>
-                    {/*                     
-                    <Image
-                      source={}
-                      style={{ height: 35, width: 35 }}
-                    /> */}
                     <Text style={styles.callOutHeading}>{r.name}</Text>
                     <Text style={styles.callOutAddress}>{r.vicinity}</Text>
                     <TouchableOpacity>
